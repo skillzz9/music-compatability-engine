@@ -1,0 +1,8 @@
+# .gitignore
+music/
+processed_loops/
+extracted_loops/
+thesis_env/
+*.wav
+*.mid
+.DS_Store
