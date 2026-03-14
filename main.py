@@ -18,7 +18,7 @@ def main():
 
     if do_p1:
         print("\n--- PHASE 1: SLICING ---")
-        run_slicer_pipeline(RAW_DIR, LOOPS_DIR, track_limit=5)
+        run_slicer_pipeline(RAW_DIR, LOOPS_DIR, track_limit=20)
 
     if do_p2:
         print("\n--- PHASE 2: DATASET CREATION ---")
