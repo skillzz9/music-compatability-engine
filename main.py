@@ -1,51 +1,32 @@
-import torch
-from torch.utils.data import DataLoader
-from model import SiameseTwin, ContrastiveLoss
-from dataset import MultiSongDataset
+import sys
+from core.create_processed_loops import run_slicer_pipeline
+from core.create_data_set import create_training_dataset
+from core.trainer import run_training_pipeline
 
-def train():
-    # 1. Initialize
-    # Tip: Change "cpu" to "mps" if you have an M1/M2/M3 Mac for 10x speed
-    device = torch.device("cpu") 
-    model = SiameseTwin().to(device)
-    criterion = ContrastiveLoss(margin=1.0)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.0005)
-    
-    # 2. Load Data
-    train_set = MultiSongDataset('multi_song_tensors')
-    # Reduced batch_size to 2 for better stability on MacBook Air RAM
-    train_loader = DataLoader(train_set, batch_size=2, shuffle=True)
-    
-    print(f"Starting training on {len(train_set)} pairs...")
+def str_to_bool(val):
+    return val.lower() in ("true", "t", "1", "yes")
 
-    # 3. Training Loop
-    model.train()
-    for epoch in range(100):
-        total_loss = 0
-        
-        # FIXED: Added enumerate and parentheses for correct unpacking
-        for i, (t1, t2, label) in enumerate(train_loader):
-            t1, t2, label = t1.to(device), t2.to(device), label.to(device)
-            
-            optimizer.zero_grad()
-            out1, out2 = model(t1, t2)
-            loss = criterion(out1, out2, label)
-            loss.backward()
-            optimizer.step()
-            
-            total_loss += loss.item()
-            
-            # FIXED: Moved inside the loop to see real-time progress
-            if i % 10 == 0:
-                print(f"  Epoch [{epoch+1}/100] | Batch [{i}/{len(train_loader)}] | Loss: {loss.item():.4f}")
-            
-        # Summary print after each epoch
-        avg_loss = total_loss / len(train_loader)
-        print(f"==> Epoch [{epoch+1}/100] Complete. Average Loss: {avg_loss:.4f}")
+def main():
+    RAW_DIR = "music/babyslakh_16k"
+    LOOPS_DIR = "processed_loops"
+    TRAIN_DATA_DIR = "training_dataset"
 
-    # 4. Save the "Brain"
-    torch.save(model.state_dict(), "mini_snn_model.pth")
-    print("Model saved to mini_snn_model.pth")
+    # Get flags from CLI
+    do_p1 = str_to_bool(sys.argv[1]) if len(sys.argv) > 1 else False
+    do_p2 = str_to_bool(sys.argv[2]) if len(sys.argv) > 2 else False
+    do_p3 = str_to_bool(sys.argv[3]) if len(sys.argv) > 3 else False
+
+    if do_p1:
+        print("\n--- PHASE 1: SLICING ---")
+        run_slicer_pipeline(RAW_DIR, LOOPS_DIR, track_limit=5)
+
+    if do_p2:
+        print("\n--- PHASE 2: DATASET CREATION ---")
+        create_training_dataset(LOOPS_DIR, TRAIN_DATA_DIR)
+
+    if do_p3:
+        print("\n--- PHASE 3: TRAINING ---")
+        run_training_pipeline(TRAIN_DATA_DIR, epochs=10, batch_size=16)
 
 if __name__ == "__main__":
-    train()
+    main()
