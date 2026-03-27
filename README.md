@@ -10,13 +10,6 @@ FlowState is a high-performance audio engine designed to bridge the gap between 
 * **Low-Latency Stack:** Architected for professional-grade performance to ensure a reliable and high-quality user experience during live use.
 * **ML Emotion Mapping:** Integrates data-driven emotion analysis to suggest track improvements and analyze listener resonance.
 
-## Technical Overview
-
-The core of the compatibility engine relies on a Siamese architecture to learn a similarity metric between audio embeddings. Given two audio samples $x_1$ and $x_2$, the network computes a distance $d$ representing their harmonic and rhythmic compatibility:
-
-$$d(x_1, x_2) = \|f(x_1) - f(x_2)\|_2$$
-
-Where $f(x)$ is the feature representation learned by the neural network.
 
 ## Project Goals
 
