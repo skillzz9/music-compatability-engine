@@ -53,8 +53,8 @@ if __name__ == "__main__":
     MODEL_PATH = os.path.join(project_root, "harmony_model.pth")
     
     # --- TEST 1: Neighboring Stems (Seen Logic) ---
-    file_1 = os.path.join(project_root, "processed_loops/Track00001_S07/loop_001.wav")
-    file_2 = os.path.join(project_root, "processed_loops/Track00001_S08/loop_001.wav")
+    file_1 = os.path.join(project_root, "ownmusic/pair2_1.wav")
+    file_2 = os.path.join(project_root, "ownmusic/pair2_2.wav")
     
     print(f"\n🔍 TEST 1: {os.path.basename(file_1)} vs {os.path.basename(file_2)}")
     try:

@@ -24,8 +24,9 @@ def run_full_test(data_dir, model_path, track_limit=20):
     model.to(device)
     model.eval()
 
+    # Added 'sim_sum' to track the total percentages for averaging
     categories = {'pos': 1, 'neg_hard': -1, 'neg_easy': -1}
-    results = {cat: {"correct": 0, "total": 0} for cat in categories}
+    results = {cat: {"correct": 0, "total": 0, "sim_sum": 0.0} for cat in categories}
 
     print(f"\n🧪 STARTING FULL EVALUATION (Limit: {track_limit} tracks)")
     print(f"{'CATEGORY':<10} | {'FILE NAME':<45} | {'SIMILARITY':<10} | {'RESULT'}")
@@ -39,7 +40,6 @@ def run_full_test(data_dir, model_path, track_limit=20):
             files = sorted([f for f in os.listdir(cat_path) if f.endswith('.npy')])
             
             for f in files:
-                # Track limit filter logic
                 track_id = f.split('_')[0]
                 try:
                     track_num = int(track_id.replace("Track", ""))
@@ -48,6 +48,8 @@ def run_full_test(data_dir, model_path, track_limit=20):
 
                 # Load Tensor
                 data = np.load(os.path.join(cat_path, f))
+                
+                # Slicing the stack: data[0] is Loop A, data[1] is Loop B
                 t1 = torch.from_numpy(data[0]).unsqueeze(0).unsqueeze(0).to(device).float()
                 t2 = torch.from_numpy(data[1]).unsqueeze(0).unsqueeze(0).to(device).float()
 
@@ -58,23 +60,25 @@ def run_full_test(data_dir, model_path, track_limit=20):
                 # Convert -1...1 to 0...100%
                 sim_pct = ((sim_raw + 1) / 2) * 100
 
-                # Prediction (Similarity > 65% is treated as a match)
+                # Prediction logic
                 prediction = 1 if sim_pct > 65 else -1
-                
                 is_correct = (prediction == target_label)
                 status = "✅ PASS" if is_correct else "❌ FAIL"
                 
+                # Update statistics
                 results[cat]["total"] += 1
+                results[cat]["sim_sum"] += sim_pct # Add to the running total
                 if is_correct:
                     results[cat]["correct"] += 1
 
-                # Detailed Per-File Print
                 print(f"{cat.upper():<10} | {f:<45} | {sim_pct:>8.2f}% | {status}")
 
     # --- FINAL SUMMARY REPORT ---
-    print("\n" + "="*40)
+    print("\n" + "="*60)
     print("📊 SIAMESE NETWORK EVALUATION SUMMARY")
-    print("="*40)
+    print("="*60)
+    print(f"{'CATEGORY':<10} | {'ACCURACY':<15} | {'AVG SIMILARITY':<15} | {'RATIO'}")
+    print("-" * 60)
     
     overall_correct = 0
     overall_total = 0
@@ -82,15 +86,18 @@ def run_full_test(data_dir, model_path, track_limit=20):
     for cat, stats in results.items():
         if stats["total"] > 0:
             acc = (stats["correct"] / stats["total"]) * 100
-            print(f"{cat.upper():<10} | Accuracy: {acc:>6.2f}% ({stats['correct']}/{stats['total']})")
+            avg_sim = stats["sim_sum"] / stats["total"] # Calculate the average
+            
+            print(f"{cat.upper():<10} | {acc:>6.2f}%         | {avg_sim:>8.2f}%       | {stats['correct']}/{stats['total']}")
+            
             overall_correct += stats["correct"]
             overall_total += stats["total"]
 
     if overall_total > 0:
         total_acc = (overall_correct / overall_total) * 100
-        print("-" * 40)
+        print("-" * 60)
         print(f"🔥 FINAL TOTAL ACCURACY: {total_acc:.2f}%")
-        print("="*40)
+        print("="*60)
 
 if __name__ == "__main__":
     DATA_DIR = os.path.join(project_root, "training_dataset")

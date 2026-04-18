@@ -1,7 +1,9 @@
 import sys
+import os
 from core.create_processed_loops import run_slicer_pipeline
 from core.create_data_set import create_training_dataset
 from core.trainer import run_training_pipeline
+from tests.full_test_engine import run_full_test
 
 def str_to_bool(val):
     return val.lower() in ("true", "t", "1", "yes")
@@ -15,6 +17,7 @@ def main():
     do_p1 = str_to_bool(sys.argv[1]) if len(sys.argv) > 1 else False
     do_p2 = str_to_bool(sys.argv[2]) if len(sys.argv) > 2 else False
     do_p3 = str_to_bool(sys.argv[3]) if len(sys.argv) > 3 else False
+    do_p4 = str_to_bool(sys.argv[4]) if len(sys.argv) > 4 else False
 
     if do_p1:
         print("\n--- PHASE 1: SLICING ---")
@@ -27,6 +30,11 @@ def main():
     if do_p3:
         print("\n--- PHASE 3: TRAINING ---")
         run_training_pipeline(TRAIN_DATA_DIR, epochs=10, batch_size=16)
+
+    if do_p4:
+        print("\n--- PHASE 4: TESTING ---")
+        
+
 
 if __name__ == "__main__":
     main()
